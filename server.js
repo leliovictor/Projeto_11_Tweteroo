@@ -14,18 +14,23 @@ function isImage(url) {
 
 server.post("/sign-up", (req, res) => {
   const { username, avatar } = req.body;
-  
+
   if (username === "" || avatar === "")
-  res.status(400).send("Todos os campos são obrigatórios!");
-  
+    res.status(400).send("Todos os campos são obrigatórios!");
+
   if (!isImage(avatar)) res.status(400).send("Foto com formato inválido");
 
   users.push(req.body);
-  res.send("OK");
+  res.status(201).send("OK");
 });
 
 server.get("/tweets", (req, res) => {
-  const lastTweets = tweets.slice(-10, tweets.length).reverse();
+  if (isNaN(req.query.page) || req.query.page < 0) res.status(400).send("Informe uma página válida!");
+  const tweetsInterval = req.query.page * 10;
+  const lastTweets = tweets
+    .slice(-tweetsInterval, tweets.length + 10 - tweetsInterval)
+    .reverse();
+
   res.send(lastTweets);
 });
 
@@ -34,7 +39,7 @@ server.post("/tweets", (req, res) => {
   const user = users.find((obj) => username === obj.username);
   tweets.push({ ...req.body, avatar: user.avatar });
 
-  res.send("OK");
+  res.status(201).send("OK");
 });
 
 server.listen(5000);
