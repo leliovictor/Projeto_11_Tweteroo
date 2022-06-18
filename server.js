@@ -5,7 +5,7 @@ const server = express();
 server.use(cors());
 server.use(express.json());
 
-const users = [];
+const users = []; //juntar os dois e ja adicionar o avatar ao tweet no post para facilitar?
 const tweets = [];
 
 function isImage(url) {
@@ -16,16 +16,20 @@ server.post("/sign-up", (req, res) => {
   const { username, avatar } = req.body;
 
   if (username === "" || avatar === "")
-    res.status(400).send("Todos os campos são obrigatórios!");
+    return res.status(400).send("Todos os campos são obrigatórios!");
 
-  if (!isImage(avatar)) res.status(400).send("Foto com formato inválido");
+  if (!isImage(avatar)) return res.status(400).send("Foto com formato inválido");
 
   users.push(req.body);
+  console.log(users);
+
   res.status(201).send("OK");
 });
 
 server.get("/tweets", (req, res) => {
-  if (isNaN(req.query.page) || req.query.page < 0) res.status(400).send("Informe uma página válida!");
+  if (isNaN(req.query.page) || req.query.page < 0)
+    res.status(400).send("Informe uma página válida!");
+
   const tweetsInterval = req.query.page * 10;
   const lastTweets = tweets
     .slice(-tweetsInterval, tweets.length + 10 - tweetsInterval)
@@ -34,10 +38,19 @@ server.get("/tweets", (req, res) => {
   res.send(lastTweets);
 });
 
+server.get("/tweets/:person", (req, res) => {
+  const person = req.params.person;
+  console.log(person);
+  console.log(tweets);
+  res.send("OK");
+});
+
 server.post("/tweets", (req, res) => {
-  const { username, tweet } = req.body;
-  const user = users.find((obj) => username === obj.username);
-  tweets.push({ ...req.body, avatar: user.avatar });
+  const { tweet } = req.body;
+  const { user } = req.headers;
+
+  const username = users.find((obj) => user === obj.username);
+  tweets.push({ ...username, tweet });
 
   res.status(201).send("OK");
 });
